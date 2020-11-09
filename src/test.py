@@ -3,49 +3,49 @@ from bs4 import BeautifulSoup
 from operator import attrgetter
 import json
 
-r = requests.get(
+
+def scrape_listing(url):
+    # make request
+    r = requests.get(url)
+
+    # extract json data
+    soup = BeautifulSoup(r.text, "html.parser")
+    scripts = soup.find_all("script", type="application/ld+json")
+    json_raw = map(attrgetter("string"), scripts)
+
+    # parse to json
+    return list(map(json.loads, json_raw))
+
+
+def parse_listing(data: list):
+    # precondition
+    if not type(data) is list:
+        raise Exception(
+            "parse_data: <class 'list'> expected, {} given.".format(type(data))
+        )
+
+    # consider only data we want
+    data = list(
+        filter(lambda x: type(x["@type"]) is list and "House" in x["@type"], data)
+    )[0]
+
+    offers = data.get("offers", {})
+
+    return {
+        "name": data.get("name", None),
+        "description": data.get("description", None),
+        "price": offers.get("price", None),
+        "currency": offers.get("priceCurrency", None),
+        "url": data.get("url", None),
+    }
+
+
+urls = [
     "https://househunting.nl/woningaanbod/h103400217-landbouwstraat-tilburg/",
-    #  data={"email": "n.michael.sdu@gmail.com", "password": "1022355Aa!"},
-)
-
-soup = BeautifulSoup(r.text, "html.parser")
-
-scripts = soup.find_all("script", type="application/ld+json")
-
-json_raw = map(attrgetter("string"), scripts)
-
-json_parsed = map(json.loads, json_raw)
-
-print(list(json_parsed))
-
-
-class Data:
-    """"""
-
-    def __init__(self, payload):
-        self.payload = payload
-        #  self.name = None
-        #  self.description = None
-        #  self.price = None
-        #  self.url = None
-        #  self.address = None
-
-    @property
-    def name(self):
-        pass
-
-    @property
-    def description(self):
-        pass
-
-    @property
-    def price(self):
-        pass
-
-    @property
-    def url(self):
-        pass
-
-    @property
-    def address(self):
-        pass
+    "https://househunting.nl/woningaanbod/h103400311-vier-heultjes-sprang-capelle/",
+    "https://househunting.nl/woningaanbod/h103321275-boutenslaan-eindhoven/",
+    "https://househunting.nl/woningaanbod/h103420713-alexander-numankade-utrecht/",
+]
+for url in urls:
+    data = scrape_listing(url)
+    print(parse_listing(data))
