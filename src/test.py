@@ -26,7 +26,9 @@ def parse_listing(data: list):
 
     # consider only data we want
     data = list(
-        filter(lambda x: type(x["@type"]) is list and "House" in x["@type"], data)
+        filter(
+            lambda x: type(x.get("@type")) is list and "House" in x.get("@type"), data
+        )
     )[0]
 
     offers = data.get("offers", {})
