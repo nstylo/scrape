@@ -14,18 +14,18 @@ const Item = styled.div`
   width: 400px;
   padding: 12px;
   margin: 12px 0;
-  border: 1px solid red;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  box-shadow: 1px 3px 8px 1px #aaa;
 `;
 
 const Ad = ({ name, price, description, url }) => {
   return (
     <Item>
-      <p>{name}</p>
-      <p>{description}</p>
-      <p>{price + "€"}</p>
       <a href={url} target="_blank" rel="noreferrer">
-        go to website.
+        {name}
       </a>
+      <p>{price + "€"}</p>
     </Item>
   );
 };

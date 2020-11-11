@@ -79,6 +79,11 @@ def parse_listing(data: list):
     }
 
 
+#####################################################################################
+#                                   Client code                                     #
+#####################################################################################
+
+
 urls1 = scrape_listing_urls("https://househunting.nl/woningaanbod/", "Eindhoven", 5)
 urls2 = scrape_listing_urls("https://househunting.nl/woningaanbod/", "Amsterdam", 5)
 urls = urls1 + urls2
