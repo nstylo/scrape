@@ -5,12 +5,23 @@ import json
 import os
 
 
+def get_geocode(adress: str):
+    res = requests.post(
+        "https://maps.googleapis.com/maps/api/geocode/json",
+        params={"address": adress, "key": os.getenv("MAPS_API")},
+    )
+
+    return res.json()["results"][0]["geometry"]["location"]
+
+
 def scrape_listing_urls(url: str, location: str, km: int):
+    geocode = get_geocode(location)
+
     params = {
         "type": "for-rent",
         "filter_location": location,
-        "lat": "51.441641",  # TODO: connect to geolocation api
-        "lng": "5.4697225",
+        "lat": geocode["lat"],
+        "lng": geocode["lng"],
         "street": "",
         "km": km,
         "min-price": "",
@@ -68,7 +79,10 @@ def parse_listing(data: list):
     }
 
 
-urls = scrape_listing_urls("https://househunting.nl/woningaanbod/", "Eindhoven", 5)
+urls1 = scrape_listing_urls("https://househunting.nl/woningaanbod/", "Eindhoven", 5)
+urls2 = scrape_listing_urls("https://househunting.nl/woningaanbod/", "Amsterdam", 5)
+urls = urls1 + urls2
+
 data = list(map(lambda url: parse_listing(scrape_listing(url)), urls))
 
 for d in data:
