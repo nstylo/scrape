@@ -40,26 +40,19 @@ def scrape_listing(url: str):
     # make request
     r = requests.get(url)
 
-    # extract json data
     soup = BeautifulSoup(r.text, "html.parser")
+
+    # extract json data
     scripts = soup.find_all("script", type="application/ld+json")
-    json_raw = map(attrgetter("string"), scripts)
-
+    json_raw_scripts = map(attrgetter("string"), scripts)
     # parse to json
-    return list(map(json.loads, json_raw))
-
-
-def parse_listing(data: list):
-    # precondition
-    if not type(data) is list:
-        raise Exception(
-            "parse_data: <class 'list'> expected, {} given.".format(type(data))
-        )
+    json_parsed_scripts = list(map(json.loads, json_raw_scripts))
 
     # consider only data we want
     data = list(
         filter(
-            lambda x: type(x.get("@type")) is list and "House" in x.get("@type"), data
+            lambda x: type(x.get("@type")) is list and "House" in x.get("@type"),
+            json_parsed_scripts,
         )
     )[0]
 
@@ -70,13 +63,25 @@ def parse_listing(data: list):
     except ValueError:
         price = None
 
-    return {
+    base_data = {
         "name": data.get("name", None),
         "description": data.get("description", None),
         "price": price,
         "currency": offers.get("priceCurrency", None),
         "url": data.get("url", None),
     }
+
+    # extract image urls
+    images = soup.find("div", {"class": "single_media"}).find_all("a")
+    json_raw_img_urls = map(lambda x: x.get("href", None), images)
+    img_data = list(json_raw_img_urls)
+
+    final_data = {
+        "base_data": base_data,
+        "img_data": img_data,
+    }
+
+    return final_data
 
 
 #####################################################################################
@@ -85,10 +90,10 @@ def parse_listing(data: list):
 
 
 urls1 = scrape_listing_urls("https://househunting.nl/woningaanbod/", "Eindhoven", 5)
-urls2 = scrape_listing_urls("https://househunting.nl/woningaanbod/", "Amsterdam", 5)
-urls = urls1 + urls2
+#  urls2 = scrape_listing_urls("https://househunting.nl/woningaanbod/", "Amsterdam", 5)
+#  urls = urls1 + urls2
 
-data = list(map(lambda url: parse_listing(scrape_listing(url)), urls))
+data = list(map(lambda url: scrape_listing(url), urls1))
 
 for d in data:
     res = requests.post(
